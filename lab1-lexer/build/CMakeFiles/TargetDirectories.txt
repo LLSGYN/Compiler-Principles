@@ -1,0 +1,3 @@
+/home/llsgyn/myrepo/2021Fall/Compiler-Principles/lab1-lexer/build/CMakeFiles/rebuild_cache.dir
+/home/llsgyn/myrepo/2021Fall/Compiler-Principles/lab1-lexer/build/CMakeFiles/edit_cache.dir
+/home/llsgyn/myrepo/2021Fall/Compiler-Principles/lab1-lexer/build/CMakeFiles/scan.dir

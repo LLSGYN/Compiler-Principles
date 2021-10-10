@@ -1,0 +1,1 @@
+/usr/bin/c++  -O0 -Wall -g2 -ggdb CMakeFiles/scan.dir/source/scan.cpp.o CMakeFiles/scan.dir/source/lexer.cpp.o CMakeFiles/scan.dir/source/token.cpp.o -o scan 
