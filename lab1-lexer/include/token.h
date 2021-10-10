@@ -106,7 +106,7 @@ public:
         TOKEN_INVALID,          
         TOKEN_EOF,
         TOKEN_KEYWORD,
-        TOKEN_IDENTIFIER,       /* [a-zA-Z_]+[a-zA-Z_0-9]* */
+        TOKEN_IDENTIFIER,
         TOKEN_OPERATOR, 
         TOKEN_STRING,
         TOKEN_CHARACTER,
@@ -123,23 +123,23 @@ public:
         std::string filename;
     } loc;
     Token() = default;
-    static Token make_integer_token(i64 val, std::string* text);
-    static Token make_float_token(double val, std::string* text);
-    static Token make_keyword_token(Keyword KeyType, std::string* text);
-    static Token make_identifier_token(std::string* text);
-    static Token make_operator_token(Operator OpType, std::string* text);
-    static Token make_character_token(char val, std::string* text);
-    static Token make_string_token(std::string* text);
-    static Token make_eof_token();
-    static Token make_invalid_token();
+    static Token make_integer_token(i64 val, const Location& _loc);
+    static Token make_float_token(double val, const Location& _loc);
+    static Token make_keyword_token(Keyword KeyType, const Location& _loc);
+    static Token make_identifier_token(std::string* text, const Location& _loc);
+    static Token make_operator_token(Operator OpType, const Location& _loc);
+    static Token make_character_token(char val, const Location& _loc);
+    static Token make_string_token(std::string* text, const Location& _loc);
+    static Token make_eof_token(const Location& _loc);
+    static Token make_invalid_token(const Location& _loc);
     Classification TokenType() const;
     friend std::ostream& operator << (std::ostream& os, const Token& t);
 private:
-    Token(Classification, Keyword, std::string*);
-    Token(Classification, std::string*);
-    Token(Classification, i64, std::string*);
-    Token(Classification, double, std::string*);
-    Token(Classification, Operator, std::string*);
+    Token(Classification, Keyword, const Location&);
+    Token(Classification, const Location&, std::string*);
+    Token(Classification, i64, const Location&);
+    Token(Classification, double,const Location&);
+    Token(Classification, Operator, const Location&);
     // Token classification
     Classification classification;
     union token

@@ -76,7 +76,9 @@ int main(int argc, char **argv) {
     auto token = lexer.getNextToken();
     int invalid_count = 0, keyword_count = 0, identifier_count = 0, float_count = 0,
         operator_count = 0, string_count = 0, character_count = 0, integer_count = 0;
+    // int cnt = 0;
     while (token.TokenType() != Token::TOKEN_EOF) {
+        // if(++cnt > 300) break;
         switch (token.TokenType())
         {
         case Token::TOKEN_INVALID: invalid_count++; break;
@@ -107,6 +109,5 @@ int main(int argc, char **argv) {
               << invalid_count << "\tinvalid tokens" << std::endl;
     std::cout << "in total" << std::endl;
     // lexer.print();
-    // complete info
     return 0;
 }

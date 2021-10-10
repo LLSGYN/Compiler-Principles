@@ -16,7 +16,7 @@
 
 namespace lexdef 
 {
-    constexpr auto BFSZ = 16;
+    constexpr auto BFSZ = 4096;
     constexpr auto eof = 0;
     // bool failFlag = 0;
 
@@ -113,16 +113,16 @@ public:
     Token getNextToken();
     int getRowCount() { return this->rowCount; }
     int getCharCount() { return this->charCount; }
-    // void print() {
-    //     for (int i = 0; i < 17; ++i)
-    //         std::cerr << int(buf[i]) << " ";
-    //     std::cerr << std::endl;
-    //     std::cerr << "-------------" << std::endl;
-    //     std::cerr << std::endl;
-    //     for (int i = 17; i < 34; ++i)
-    //         std::cerr << int(buf[i]) << " ";
-    //     std::cerr << std::endl;
-    // }
+    void print() {
+        for (int i = 0; i < 17; ++i)
+            std::cerr << int(buf[i]) << " ";
+        std::cerr << std::endl;
+        std::cerr << "-------------" << std::endl;
+        std::cerr << std::endl;
+        for (int i = 17; i < 34; ++i)
+            std::cerr << int(buf[i]) << " ";
+        std::cerr << std::endl;
+    }
 };
 
 #endif

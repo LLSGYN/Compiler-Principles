@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
             if (flag) result += fib(i);
     }*/
     result = ((result << 3) ^ 0x3f3f3f3f) % 998244353;
-    double a = 289.129 * 97e-3;
+    double a = 289.129 * 97e-3 / 3.4e5.6;
     char *s = "this is a string with escape char like \34, \t, \x7f";
     char *invalid = "invalid escape char is \777";
     "missing \"?;

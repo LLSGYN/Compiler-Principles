@@ -1,10 +1,5 @@
 #include "lexer.h"
 
-#if 0
-#define DBG
-#include <iostream>
-#endif
-
 namespace lexdef 
 {
     std::string* SymbolTable::findItem(const std::string& item)
@@ -27,14 +22,6 @@ Lexer::Lexer(const std::string& source): file(source), _filename(source)
     *_end[0] = *_end[1] = lexdef::eof;
     forward = buf;
     loadBuf(0); loadBuf(1);
-    #ifdef DBG
-        for (int i = lexdef::BFSZ - 15; i <= lexdef::BFSZ; ++i) {
-            if (buf[i + 4097] == 'c') std::cout << "c";
-            else std::cout << (int)(buf[i + 4097]) << " ";
-        }
-        std::cout << std::endl;
-        // we will meet 0 and -1
-    #endif
 }
 
 bool Lexer::loadBuf(int id)
@@ -66,16 +53,15 @@ char Lexer::nextChar()
         rowCount++, colCount = 1;
     if (*++forward == lexdef::eof) {
         if (forward == _end[0]) {
-            loadBuf(1);
+            terminateFlag = !loadBuf(1);
             forward = _begin[1];
         }
         else if(forward == _end[1]) {
-            loadBuf(0);
+            terminateFlag = !loadBuf(0);
             forward = _begin[0];
         }
         else /* eof within a buffer marks the end of input */
         {
-            // std::cerr << "eof trigegered" << std::endl;
             terminateFlag = true;
         }
     };
@@ -213,17 +199,16 @@ Token Lexer::scanNumber()
         }
     }
     if (!isValidToken) {
-        return Token::make_invalid_token();
+        return Token::make_invalid_token(location());
     }
     else {
         if (isInt) {
             i64 val = strtol(numRead.c_str(), nullptr, base);
-            // std::cerr << "enters here: " << numRead << std::endl;
-            return Token::make_integer_token(val, __table.update(numRead.c_str()));
+            return Token::make_integer_token(val, loc);
         }
         else {
             double val = strtod(numRead.c_str(), nullptr);
-            return Token::make_float_token(val, __table.update(numRead.c_str()));
+            return Token::make_float_token(val, loc);
         }
     }
 }
@@ -287,17 +272,17 @@ bool Lexer::parseSuffix(bool _intFlag)
 Token Lexer::scanIdentifier()
 {
     // std::cerr << "scanning identifier" << std::endl;
+    auto loc = this->location();
     std::string idRead;
     idRead += nextChar();
     while (isalp(peekChar()) || isdig(peekChar()))
         idRead += nextChar();
     // std::cout << "idRead = " << idRead << std::endl;
     auto iter = lexdef::_keywords.find(idRead);
-    auto sPtr = __table.update(idRead);
     if (iter != lexdef::_keywords.end())
-        return Token::make_keyword_token(iter->second, sPtr);
+        return Token::make_keyword_token(iter->second, loc);
     else
-        return Token::make_identifier_token(sPtr);
+        return Token::make_identifier_token(__table.update(idRead), loc);
 }
 
 void Lexer::skipCppComment()
@@ -322,13 +307,15 @@ void Lexer::skipCComment()
 
 Token Lexer::scanOneCharOpr()
 {
+    auto loc = this->location();
     char c = nextChar();
     auto iter = lexdef::singleCharOperators.find(c);
-    return Token::make_operator_token(iter->second, __table.update(std::string(1, c)));
+    return Token::make_operator_token(iter->second, loc);
 }
 
 Token Lexer::scanMultiCharOpr()
 {
+    auto loc = this->location();
     std::string op;
     op += nextChar();
     bool invalidFlag = false;
@@ -368,9 +355,9 @@ Token Lexer::scanMultiCharOpr()
         break;
     }
     if (invalidFlag)
-        return Token::make_invalid_token();
+        return Token::make_invalid_token(location());
     auto iter = lexdef::multiCharOperators.find(op);
-    return Token::make_operator_token(iter->second, __table.update(op));
+    return Token::make_operator_token(iter->second, loc);
 }
 
 void Lexer::getEscapeCharacter(std::string& charRead)
@@ -431,13 +418,13 @@ Token Lexer::scanCharacter()
     if (c != '\'') {
         error(loc, "missing terminating \' character");
         // std::cerr << "missing \'" << std::endl;
-        return Token::make_invalid_token();
+        return Token::make_invalid_token(location());
     }
     else if (charRead.length() > 1) {
         error(loc, "multi-character character constant");
-        return Token::make_invalid_token();
+        return Token::make_invalid_token(location());
     }
-    else return Token::make_character_token(charRead[0], __table.update(charRead));
+    else return Token::make_character_token(charRead[0], loc);
 }
 
 Token Lexer::scanString()
@@ -457,16 +444,16 @@ Token Lexer::scanString()
     }
     if (c != '\"') {
         error(loc, "missing terminating \" character");
-        return Token::make_invalid_token();
+        return Token::make_invalid_token(location());
     }
-    else return Token::make_string_token(__table.update(strRead));
+    else return Token::make_string_token(__table.update(strRead), loc);
 }
 
 Token Lexer::getNextToken()
 {
     while (true) {
         if (this->terminateFlag)
-            return Token::make_eof_token();
+            return Token::make_eof_token(this->location());
         switch (peekChar())
         {
         // skip all whitespace
@@ -478,7 +465,8 @@ Token Lexer::getNextToken()
             }
             break;
 
-        case '/':
+        case '/': {
+            auto loc = this->location();
             nextChar();
             if (peekChar() == '/') {
                 nextChar();
@@ -491,11 +479,12 @@ Token Lexer::getNextToken()
             }
             else if (peekChar() == '=') {
                 nextChar();
-                return Token::make_operator_token(OPERATOR_DIV_ASSIGN, __table.update("/="));
+                return Token::make_operator_token(OPERATOR_DIV_ASSIGN, loc);
             }
             else 
-                return Token::make_operator_token(OPERATOR_DIV, __table.update("/"));
+                return Token::make_operator_token(OPERATOR_DIV, loc);
             break;
+        }
         
         case '0':case '1':case '2':case '3':
         case '4':case '5':case '6':case '7':
@@ -536,7 +525,7 @@ Token Lexer::getNextToken()
         default:
             error(location(), "stray \'%\' in the program", std::string(1, peekChar()));
             fail();
-            return Token::make_invalid_token();
+            return Token::make_invalid_token(location());
             break;
         }
     }

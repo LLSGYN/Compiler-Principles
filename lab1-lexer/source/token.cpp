@@ -120,14 +120,14 @@ std::ostream& operator << (std::ostream& os, const Token& t)
     return os;
 }
 
-Token::Token(Classification c, Keyword KeyType, std::string* _text)
+Token::Token(Classification c, Keyword KeyType, const Location& _loc)
 {
     classification = c;
     u.keyword = KeyType;
-    text = _text;
+    loc = _loc;
 }
 
-Token::Token(Classification c, std::string* _text = nullptr)
+Token::Token(Classification c, const Location& _loc, std::string* _text = nullptr)
 {
     classification = c;
     switch (classification)
@@ -140,7 +140,7 @@ Token::Token(Classification c, std::string* _text = nullptr)
         break;
     default: break;
     }
-    text = _text;
+    loc = _loc;
 }
 
 Token::Classification Token::TokenType() const
@@ -148,70 +148,70 @@ Token::Classification Token::TokenType() const
     return this->classification;
 }
 
-Token::Token(Classification c, i64 val, std::string* _text)
+Token::Token(Classification c, i64 val, const Location& _loc)
 {
     classification = c;
     u.integerValue = val;
-    text = _text;
+    loc = _loc;
 }
 
-Token::Token(Classification c, double val, std::string* _text)
+Token::Token(Classification c, double val, const Location& _loc)
 {
     classification = c;
     u.floatValue = val;
-    text = _text;
+    loc = _loc;
 }
 
-Token::Token(Classification c, Operator OpType, std::string* _text)
+Token::Token(Classification c, Operator OpType, const Location& _loc)
 {
     classification = c;
     u.operator_ = OpType;
-    text = _text;
+    loc = _loc;
 }
 
-Token Token::make_keyword_token(Keyword KeyType, std::string* text)
+Token Token::make_keyword_token(Keyword KeyType, const Location& _loc)
 {
-    return Token(TOKEN_KEYWORD, KeyType, text);
+    return Token(TOKEN_KEYWORD, KeyType, _loc);
 }
 
-Token Token::make_identifier_token(std::string* text)
+Token Token::make_identifier_token(std::string* text, const Location& _loc)
 {
-    return Token(TOKEN_IDENTIFIER, text);
+    return Token(TOKEN_IDENTIFIER, _loc, text);
 }
 
-Token Token::make_integer_token(i64 val, std::string* text)
+Token Token::make_integer_token(i64 val, const Location& _loc)
 {
-    return Token(TOKEN_INTEGER, val, text);
+    return Token(TOKEN_INTEGER, val, _loc);
 }
 
-Token Token::make_float_token(double val, std::string* text)
+Token Token::make_float_token(double val, const Location& _loc)
 {
-    return Token(TOKEN_FLOAT, val, text);
+    return Token(TOKEN_FLOAT, val, _loc);
 }
 
-Token Token::make_operator_token(Operator OpType, std::string* text)
+Token Token::make_operator_token(Operator OpType, const Location& _loc)
 {
-    return Token(TOKEN_OPERATOR, OpType, text);
+    return Token(TOKEN_OPERATOR, OpType, _loc);
 }
 
-Token Token::make_string_token(std::string* text)
+Token Token::make_string_token(std::string* text, const Location& _loc)
 {
-    return Token(TOKEN_STRING, text);
+    return Token(TOKEN_STRING, _loc, text);
 }
 
-Token Token::make_character_token(char val, std::string* text)
+Token Token::make_character_token(char val, const Location& _loc)
 {
-    return Token(TOKEN_CHARACTER, i64(val), text);
+    return Token(TOKEN_CHARACTER, i64(val), _loc);
 }
 
-Token Token::make_eof_token()
+Token Token::make_eof_token(const Location& _loc)
 {
-    return Token(TOKEN_EOF);
+    return Token(TOKEN_EOF, _loc);
 }
 
-Token Token::make_invalid_token()
+Token Token::make_invalid_token(const Location& _loc)
 {
-    return Token(TOKEN_INVALID);
+    return Token(TOKEN_INVALID, _loc);
 }
 
 Token::Location::Location(const std::string& _filename, int _row, int _column):
