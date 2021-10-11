@@ -157,6 +157,6 @@ private:
         // The float value
         double floatValue;
     }u;
-    std::string* text;
+    // std::string* text; // 已废弃
 };
 #endif

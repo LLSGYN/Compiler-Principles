@@ -25,12 +25,13 @@ int main(int argc, char* argv[]) {
                 */
             }
             if (flag) result += fib(i);
-    }*/
+    }
     result = ((result << 3) ^ 0x3f3f3f3f) % 998244353;
     double a = 289.129 * 97e-3 / 3.4e5.6;
-    char *s = "this is a string with escape char like \34, \t, \x7f";
-    char *invalid = "invalid escape char is \777";
-    "missing \"?;
-    char temp = 'a';
+    char *s = "this is a string with escape char like \x41, \102, \t";
+    char s1[] = "";
+    char temp = 1 ? 'abc' : ''; // invalid!
     return 1;
-}
+} /*
+without terminating
+this is a code with multiple errors

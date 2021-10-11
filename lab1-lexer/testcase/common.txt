@@ -186,18 +186,21 @@
 < operator, * >
 < identifier, s >
 < operator, = >
-< string literal, this is a string with escape char like , 	,  >
+< string literal, this is a string with escape char like A, B, 	 >
 < operator, ; >
 < keyword, char >
-< operator, * >
-< identifier, invalid >
+< identifier, s1 >
+< operator, [ >
+< operator, ] >
 < operator, = >
-< string literal, invalid escape char is ÿ >
+< string literal,  >
 < operator, ; >
 < keyword, char >
 < identifier, temp >
 < operator, = >
-< character literal, a >
+< integer, 1 >
+< operator, ? >
+< operator, : >
 < operator, ; >
 < keyword, return >
 < integer, 1 >

@@ -61,19 +61,17 @@ namespace lexdef
     public:
         // add a new item to the symbol table
         std::string* update(const std::string& item);
+        ~SymbolTable();
     };
 }
 
-/*
-可能增加lexer 的make_xx_token方法，在lexer中对table进行update， 简化程序，*text可能会废弃
-*/
 class Lexer 
 {
 private:
-    char buf[2 * (lexdef::BFSZ + 1)];
-    char *lexemeBegin, *forward, *forward_p;
-    char *_begin[2] = {buf, buf + lexdef::BFSZ + 1};
-    char *_end[2] = {buf + lexdef::BFSZ, buf + 2 * lexdef::BFSZ + 1};
+    char buf[2 * (lexdef::BFSZ + 1)]; // buffer
+    char *forward; // 向前指针
+    char *_begin[2] = {buf, buf + lexdef::BFSZ + 1}; // 缓冲区开始位置
+    char *_end[2] = {buf + lexdef::BFSZ, buf + 2 * lexdef::BFSZ + 1}; // 缓冲区结束位置
     std::ifstream file;
     int charCount = 0, tokenCount = 0;
     int rowCount = 1, colCount = 1;
@@ -83,7 +81,7 @@ private:
     char nextChar();
     char peekChar() const;
     void getEscapeCharacter(std::string&);
-    void retract();
+    // void retract(); 已废弃
     void fail();
     void skipCComment();
     void skipCppComment();
@@ -104,7 +102,7 @@ private:
     Token scanMultiCharOpr();
     lexdef::SymbolTable __table;
 
-    std::string _filename;
+    const std::string _filename;
     Token::Location location();
     void error(Token::Location _loc, const std::string& msg);
     void error(Token::Location _loc, const std::string& msg, const std::string& pat);
@@ -113,16 +111,16 @@ public:
     Token getNextToken();
     int getRowCount() { return this->rowCount; }
     int getCharCount() { return this->charCount; }
-    void print() {
-        for (int i = 0; i < 17; ++i)
-            std::cerr << int(buf[i]) << " ";
-        std::cerr << std::endl;
-        std::cerr << "-------------" << std::endl;
-        std::cerr << std::endl;
-        for (int i = 17; i < 34; ++i)
-            std::cerr << int(buf[i]) << " ";
-        std::cerr << std::endl;
-    }
+    // void print() {
+    //     for (int i = 0; i < 17; ++i)
+    //         std::cerr << int(buf[i]) << " ";
+    //     std::cerr << std::endl;
+    //     std::cerr << "-------------" << std::endl;
+    //     std::cerr << std::endl;
+    //     for (int i = 17; i < 34; ++i)
+    //         std::cerr << int(buf[i]) << " ";
+    //     std::cerr << std::endl;
+    // }
 };
 
 #endif

@@ -12,6 +12,11 @@ namespace lexdef
         auto addr = findItem(item);
         return addr ? addr : stab[item] = new std::string(item);
     }
+    SymbolTable::~SymbolTable()
+    {
+        for (auto iter: stab) 
+            delete iter.second; // 释放申请的内存
+    }
 }
 
 Lexer::Lexer(const std::string& source): file(source), _filename(source)
@@ -21,7 +26,7 @@ Lexer::Lexer(const std::string& source): file(source), _filename(source)
     }
     *_end[0] = *_end[1] = lexdef::eof;
     forward = buf;
-    loadBuf(0); loadBuf(1);
+    if (!loadBuf(0)) terminateFlag = true;
 }
 
 bool Lexer::loadBuf(int id)
@@ -48,7 +53,6 @@ char Lexer::nextChar()
 {
     char charRead = *forward;
     charCount++; colCount++;
-    // forward_p = forward;
     if (charRead == '\n')
         rowCount++, colCount = 1;
     if (*++forward == lexdef::eof) {
@@ -65,7 +69,6 @@ char Lexer::nextChar()
             terminateFlag = true;
         }
     };
-    // std::cerr << long(forward) << std::endl;
     return charRead;
 }
 
@@ -420,6 +423,10 @@ Token Lexer::scanCharacter()
         // std::cerr << "missing \'" << std::endl;
         return Token::make_invalid_token(location());
     }
+    else if (charRead.length() == 0) {
+        error(loc, "empty character constant");
+        return Token::make_invalid_token(location());
+    }
     else if (charRead.length() > 1) {
         error(loc, "multi-character character constant");
         return Token::make_invalid_token(location());
@@ -452,8 +459,9 @@ Token Lexer::scanString()
 Token Lexer::getNextToken()
 {
     while (true) {
-        if (this->terminateFlag)
+        if (this->terminateFlag) {
             return Token::make_eof_token(this->location());
+        }
         switch (peekChar())
         {
         // skip all whitespace
@@ -476,6 +484,10 @@ Token Lexer::getNextToken()
                 saw_c_comment = true;
                 nextChar();
                 skipCComment();
+                if (saw_c_comment) {
+                    error(loc, "unterminated comment");
+                    return Token::make_invalid_token(loc);
+                }
             }
             else if (peekChar() == '=') {
                 nextChar();
