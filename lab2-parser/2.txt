@@ -1,0 +1,5 @@
+E -> A | B
+A -> num | id
+B -> (L)
+L -> EL'
+L' -> ,L | eps
