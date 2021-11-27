@@ -1,6 +1,6 @@
 #include <bits/stdc++.h>
 
-#define DEBUG
+// #define DEBUG
 #define synch -2
 
 using STR = std::string;
@@ -9,16 +9,15 @@ using V = std::vector<T>;
 using VS = V<STR>;
 using PII = std::pair<int, int>;
 
-// Parser that parses LL1 grammar
 struct Parser {
-    // symbol, <id, IsNonterminal>
+    // 非终结符号、终结符号表
     std::unordered_map<STR, int> terminals, nonterminals;
     VS tt, nt;
-    using rhs_t = V<PII>;
-    V<V<rhs_t>> productions;
-    V<int> could_be_epsilon, vis;
-    V<std::set<int>> first, follow;
-    V<V<int>> table;
+    using rhs_t = V<PII>; // 存储产生式右侧的结构
+    V<V<rhs_t>> productions; // 产生式
+    V<int> could_be_epsilon, vis; // 处理非终结符号是否可能推出空
+    V<std::set<int>> first, follow; // first、follow集
+    V<V<int>> table; // ll(1) 预测分析表
     int eps_id, eof;
     int id(const STR& str, int flag) {
         if (flag) {
@@ -38,11 +37,12 @@ struct Parser {
             return terminals[str];
         }
     };
-    void init() {
+    void init(const char* filename) {
         STR linebuf;
         eps_id = id("eps", 0);
+        std::ifstream ifs(filename);
         // 读入产生式
-        while (getline(std::cin, linebuf)) {
+        while (getline(ifs, linebuf)) {
             std::stringstream ss(linebuf);
             STR Lhs, Rhs; ss >> Lhs;
             int lhs = id(Lhs, 1);
@@ -83,7 +83,7 @@ struct Parser {
         for (int i = 0; i < N; ++i)
             if (!vis[i]) getFirst({{i, 1}});
         for (int i = 0; i < N; ++i) {
-            printf("eps: %d, First(%s) = ", could_be_epsilon[i], nt[i].c_str());
+            printf("First(%s) = ", nt[i].c_str());
             auto test = first[i];
             for (auto& iter: test) {
                 printf("%s ", tt[iter].c_str());
@@ -105,20 +105,29 @@ struct Parser {
         // 输出预测分析表
         for (int i = -1; i < int(table.size()); ++i) {
             if (i == -1) {
-                printf("\t");
-                for (int j = 0; j < tt.size(); ++j)
-                    printf("%s\t", tt[j].c_str());
+                printf("%-8s", "");
+                for (int j = 1; j < tt.size(); ++j)
+                    printf("%-8s", tt[j].c_str());
                 printf("$\n");
             }
             else {
-                printf("%s\t", nt[i].c_str());
-                for (int j = 0; j < table[i].size(); ++j) {
-                    printf("%d\t", table[i][j]);
+                printf("%-8s", nt[i].c_str());
+                for (int j = 1; j < table[i].size(); ++j) {
+                    // printf("%d\t", table[i][j]);
+                    STR pro;
+                    if (table[i][j] >= 0)
+                    for (auto x: productions[i][table[i][j]])
+                        pro += x.second ? nt[x.first] : tt[x.first];
+                    else if (table[i][j] == -2)
+                        pro = "synch";
+                    printf("%-8s", pro.c_str());
                 }
                 puts("");
             }
         }
     }
+
+    // 消除左递归、提取左公因子
     void convert() {
         decltype(productions) newp(productions.size());
         for (int i = 0; i < productions.size(); ++i) {
@@ -246,6 +255,7 @@ struct Parser {
         }
         return res;
     }
+    // 求first集
     std::set<int> getFirst(rhs_t x) {
         if (!x.size()) return {};
         if (!x[0].second) return {x[0].first}; // 如果开头是终结符，则直接返回自身的集合
@@ -264,9 +274,11 @@ struct Parser {
         }
         return first[x[0].first] = ans; // 记忆化
     }
+    // 求follow集
     void getFollow() {
-        follow[0].insert(eof);
+        follow[0].insert(eof); // 加入$
         bool has_update = 1;
+        // 检查更新
         std::function<bool(std::set<int>&, const std::set<int>&)>
             update = [&](std::set<int>& des, const std::set<int>& src) {
                 int sz = des.size();
@@ -274,7 +286,7 @@ struct Parser {
                 if (des.find(eps_id) != des.end()) des.erase(eps_id); // 不加入epsilon
                 return sz < des.size();
             };
-        while (has_update) {
+        while (has_update) { // 没有更新则算法结束
             has_update = 0;
             for (int i = 0; i < productions.size(); ++i)
                 for (auto& rhs : productions[i]) {
@@ -283,13 +295,14 @@ struct Parser {
                             has_update |= update(follow[rhs[j].first], getFirst(rhs_t(rhs.begin() + j + 1, rhs.end())) );
                     }
                     for (int j = rhs.size() - 1; (~j) && rhs[j].second; --j) {
-                        if (j == rhs.size() - 1 || could_be_epsilon[rhs[j + 1].first])
+                        if (j == rhs.size() - 1 || could_be_epsilon[rhs[j + 1].first]) // 考虑epsilon的情况
                             has_update |= update(follow[rhs[j].first], follow[i]);
                         else break;
                     }
                 }
         }
     }
+    // 构造预测分析表
     void construct() {
         for (int i = 0; i < productions.size(); ++i)  {
             for (int j = 0; j < productions[i].size(); ++j) {
@@ -309,9 +322,9 @@ struct Parser {
                     }
                 }
             }
-            for (auto& it: follow[i]) {
+            for (auto& it: follow[i]) { // 加入同步信息
                 if (table[i][it] == -1)
-                    table[i][it] = synch; // synch
+                    table[i][it] = synch;
             }
         }
     }
@@ -332,7 +345,9 @@ struct Parser {
         }
         tok.push_back(eof);
     }
+    // LL(1)预测分析
     void parse(const STR& str) {
+        // 输出栈
         std::function<void(std::deque<PII>&)> print_stack = [&](std::deque<PII>& q) {
             STR buf;
             for (auto it = q.rbegin(); it != q.rend(); ++it) {
@@ -341,6 +356,7 @@ struct Parser {
             }
             printf("%-24s", buf.c_str());
         };
+        // 输出待输入内容
         auto print_input = [&](V<int>::iterator l, V<int>::iterator r) {
             STR buf;
             for (auto it = l; it < r; ++it) 
@@ -351,6 +367,7 @@ struct Parser {
         load_token(token, str);
         auto iter = token.begin();
         std::deque<PII> st;
+        // 应急处理函数
         auto error = [&]() {
             auto cur = st.front();
             if (cur.second) {
@@ -409,23 +426,26 @@ struct Parser {
             // }
             // puts("");
             // error();
+            printf("FATAL ERROR, parse fail\n");
             exit(-1);
         }
     }
 };
 
 
-int main() {
+int main(int argc, char **argv) {
     #ifdef DEBUG
-    freopen("4.txt", "r", stdin);
+    freopen("0.txt", "r", stdin);
     #endif
+    if (argc != 2) {
+        printf("enter the filename of the grammar!\n");
+        exit(-1);
+    }
     Parser parser;
-    parser.init();
-    // parser.parse("id+id*id");
-    parser.parse("(num+(num*num))/(num-num)");
-    // parser.parse("*id*+id");
-    // parser.parse("(id,(id,(num)),(id))");
-    // parser.parse("(id(id(num))(id))");
-    parser.print();
+    parser.init(argv[1]);
+    STR expr;
+    std::cin >> expr;
+    parser.parse(expr);
+    // parser.parse("(num+(num*num))/(num-num)");
     return 0;
 }
